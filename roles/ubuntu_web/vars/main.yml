@@ -1,0 +1,4 @@
+mysql_root_password: ""
+db_name: "db"
+db_user: "sqluser"
+db_user_password: "Balls1234!"

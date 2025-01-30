@@ -1,34 +1,78 @@
-- name: Install Apache
+---
+- name: Update and upgrade system packages
   apt:
-    name: apache2
-    state: present
+    update_cache: yes
+    upgrade: yes
 
-- name: Install PHP
+- name: Install MySQL
   apt:
-    name: php
+    name: mysql-server
     state: present
 
-- name: Enable Apache modules
-  apache2_module:
-    name: "{{ item }}"
+- name: Start and enable MySQL service
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Secure MySQL and configure database
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ db_name }}"
     state: present
-  loop:
-    - rewrite
-    - ssl
 
-- name: Configure Apache virtual host
-  template:
-    src: vhost.conf.j2
-    dest: /etc/apache2/sites-available/{{ server_name }}.conf
-  vars:
-    server_name: tgmglobal
+- name: Create MySQL user
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ db_user }}"
+    password: "{{ db_user_password }}"
+    priv: "{{ db_name }}.*:ALL"
+    host: localhost
+    state: present
 
-- name: Enable Apache virtual host
-  command: a2ensite {{ server_name }}.conf
-  vars:
-    server_name: tgmglobal
+- name: Run MySQL initialization script
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ db_name }}"
+    state: import
+    target: /tmp/init_db.sql
+  copy:
+    src: templates/init_db.sql.j2
+    dest: /tmp/init_db.sql
 
-- name: Restart Apache
-  service:
-    name: apache2
-    state: restarted
+- name: Install Git
+  apt:
+    name: git
+    state: present
+
+- name: Clone the Silkroad repository
+  git:
+    repo: "https://github.com/23younesm/silkroad.git"
+    dest: "/opt/silkroad"
+    clone: yes
+    update: yes
+
+- name: Install Node.js and npm
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+
+- name: Install Node.js dependencies
+  command: npm install
+  args:
+    chdir: /opt/silkroad
+
+- name: Install additional required Node.js dependencies
+  command: npm install express mysql2 cors fs path multer body-parser express-session
+  args:
+    chdir: /opt/silkroad
+
+- name: Start Node.js app
+  command: node server/server.js
+  args:
+    chdir: /opt/silkroad
