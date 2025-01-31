@@ -2,11 +2,23 @@
 windows-2019-internal-*
 windows-2019-user-*
 
+[windows_internal]
+windows-2019-internal-*
+
+[windows_user]
+windows-2019-user-*
+
 [debian]
 debian-10-internal-*
 
 [ubuntu]
 ubuntu-18-user-*
+ubuntu-20-desktop-user-*
+
+[ubuntu_web]
+ubuntu-18-user-*
+
+[ubuntu_desktop]
 ubuntu-20-desktop-user-*
 
 [centos]

@@ -61,7 +61,7 @@
       - nodejs
       - npm
     state: present
-
+    
 - name: Install Node.js dependencies
   command: npm install
   args:
@@ -76,3 +76,4 @@
   command: node server/server.js
   args:
     chdir: /opt/silkroad
+    

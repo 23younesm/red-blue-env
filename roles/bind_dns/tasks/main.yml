@@ -1,0 +1,11 @@
+---
+- name: Install BIND DNS server
+  apt:
+    name: bind9
+    state: present
+
+- name: Configure BIND
+  template:
+    src: named.conf.options.j2
+    dest: /etc/bind/named.conf.options
+  notify: restart_bind_dns

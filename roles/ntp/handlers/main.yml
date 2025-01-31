@@ -1,0 +1,5 @@
+---
+handlers:
+  - name: restart_ntp
+    service: ntp
+    state: restarted

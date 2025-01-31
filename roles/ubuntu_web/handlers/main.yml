@@ -6,3 +6,4 @@
 
 - name: Restart Node.js App
   command: pkill -f "node server/server.js" && nohup node /opt/silkroad/server/server.js &
+

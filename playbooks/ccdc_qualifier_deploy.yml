@@ -1,0 +1,56 @@
+---
+- name: Linux-specific common tasks
+  hosts: linux
+  become: yes # This ensures all tasks run with sudo privileges
+  roles:
+    - linux
+
+- name: Windows-specific common tasks
+  hosts: windows
+  roles:
+    - windows
+
+- name: Configure the Domain Controller
+  hosts: windows_internal
+  roles:
+    - primary_dc
+
+- name: Configure secondary Windows server
+  hosts: windows_user
+  roles:
+    - windows_docker_remote
+    
+- name: Configure debian internal server
+  hosts: debian
+  become: yes
+  roles:
+    - bind_dns
+    - ntp
+
+- name: Configure Ubuntu web server
+  hosts: ubuntu_web
+  roles:
+    - ubuntu_web
+
+- name: Configure Ubuntu Desktop
+  hosts: ubuntu_desktop
+  roles:
+    - ubuntu_desktop
+
+- name: Configure CentOS Ecommerce
+  hosts: centos
+  become: yes
+  roles:
+    - centos_ecomm
+
+- name: Configure Fedora webmail
+  hosts: fedora
+  become: yes
+  roles:
+    - fedora_webmail_webapps
+
+- name: Install Splunk
+  hosts: splunk
+  become: yes
+  roles:
+    - splunk
