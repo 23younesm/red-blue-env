@@ -59,6 +59,13 @@ parameters:
     constraints:
       - range: { min: 1 }
     default: 1
+  master_volume_size:
+    type: number
+    label: Master Volume Size
+    description: Size of the master volume in GB.
+    default: 40
+    constraints:
+      - range: { min: 10, max: 1000 }  # Adjust min/max as needed
 
 resources:
   central_router:
@@ -101,6 +108,22 @@ resources:
           end: 10.0.0.200
       dns_nameservers:
         - 1.1.1.1
+
+  # Define a volume for the master instance
+  master_volume:
+    type: OS::Cinder::Volume
+    properties:
+      name: master-volume
+      size: { get_param: master_volume_size }  # Use the parameter for size
+      image: { get_param: ubuntu_20_image }  # Optional: Use the same image as the instance
+
+  # Attach the volume to the master instance
+  master_volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: master_instance }
+      volume_id: { get_resource: master_volume }
+      mountpoint: /dev/vdb  # Specify the mount point for the volume
 
   master_instance:
     type: OS::Nova::Server
@@ -180,6 +203,9 @@ outputs:
   master_instance_ip:
     description: IP address of the master Ubuntu instance
     value: { get_attr: [master_instance, first_address] }
+  master_volume_id:
+    description: ID of the master volume
+    value: { get_resource: master_volume }
   environment_attributes:
     description: A map of resource names to the specified attribute of each individual environment
     value: { get_attr: [ environments, attributes ] }
