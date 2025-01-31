@@ -23,13 +23,10 @@ parameters:
     type: string
   central_router_id:
     type: string
-  disk_size:
+  windows_disk_size:
     type: number
-    label: Disk Size (GB)
-    description: Size of the disk to use for Kali
-    constraints:
-      - range: { min: 15 }
-    default: 40
+  linux_disk_size:
+    type: number
 
 resources:
   env_network:
@@ -129,49 +126,49 @@ resources:
   windows_2019_internal_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: windows_disk_size }
       image: { get_param: windows_2019_image }
 
   debian_10_internal_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: debian_10_image }
 
   ubuntu_18_user_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: ubuntu_18_image }
 
   windows_2019_user_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: windows_disk_size }
       image: { get_param: windows_2019_image }
 
   ubuntu_20_desktop_user_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: ubuntu_20_image }
 
   splunk_public_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: debian_10_image }
 
   centos_7_public_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: centos_7_image }
 
   fedora_31_public_volume:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: disk_size }
+      size: { get_param: linux_disk_size }
       image: { get_param: fedora_31_image }
 
   # Servers with volumes attached
@@ -190,6 +187,13 @@ resources:
       key_name: { get_param: key_name }
       security_groups:
         - { get_resource: environment_security_group }
+      user_data_format: RAW
+      user_data: | 
+        #PS1 - Enable WinRM, disable defender and firewalls
+        Enable-PSRemoting -Force
+        Get-Service WinDefend | Stop-Service -PassThru | Set-Service -StartupType Disabled
+        Remove-WindowsFeature Windows-Defender, Windows-Defender-GUI
+        Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
       networks:
         - network: { get_resource: env_network }
           subnet: { get_resource: internal_subnet }
@@ -265,6 +269,13 @@ resources:
       key_name: { get_param: key_name }
       security_groups:
         - { get_resource: environment_security_group }
+      user_data_format: RAW
+      user_data: | 
+        #PS1 - Enable WinRM, disable defender and firewalls
+        Enable-PSRemoting -Force
+        Get-Service WinDefend | Stop-Service -PassThru | Set-Service -StartupType Disabled
+        Remove-WindowsFeature Windows-Defender, Windows-Defender-GUI
+        Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
       networks:
         - network: { get_resource: env_network }
           subnet: { get_resource: user_subnet }

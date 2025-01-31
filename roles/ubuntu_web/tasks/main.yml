@@ -20,15 +20,8 @@
   template:
     src: vhost.conf.j2
     dest: /etc/apache2/sites-available/{{ server_name }}.conf
-  vars:
-    server_name: tgmglobal
+  notify: restart_apache
 
 - name: Enable Apache virtual host
   command: a2ensite {{ server_name }}.conf
-  vars:
-    server_name: tgmglobal
-
-- name: Restart Apache
-  service:
-    name: apache2
-    state: restarted
+  notify: restart_apache

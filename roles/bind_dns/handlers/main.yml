@@ -1,0 +1,5 @@
+---
+handlers:
+  - name: restart_bind_dns
+    service: bind9
+    state: restarted

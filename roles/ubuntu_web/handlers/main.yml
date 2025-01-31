@@ -1,0 +1,4 @@
+handlers:
+  - name: restart_apache
+    service: apache2
+    state: restarted

@@ -59,13 +59,25 @@ parameters:
     constraints:
       - range: { min: 1 }
     default: 1
-  master_volume_size:
+  linux_disk_size:
     type: number
-    label: Master Volume Size
-    description: Size of the master volume in GB.
+    label: Linux Disk Size (GB)
+    description: Size of the volumes for Linux machines.
     default: 40
     constraints:
-      - range: { min: 10, max: 1000 }  # Adjust min/max as needed
+      - range: { min: 15, max: 100 }
+  windows_disk_size:
+    type: number
+    label: Windows Disk Size (GB)
+    description: Size of the volumes for Windows machines.
+    default: 40
+    constraints:
+      - range: { min: 15, max: 100 }
+  github_branch:
+    type: string
+    label: GitHub Branch
+    description: The name of the GitHub branch you're deploying from
+    default: main
 
 resources:
   central_router:
@@ -114,22 +126,16 @@ resources:
     type: OS::Cinder::Volume
     properties:
       name: master-volume
-      size: { get_param: master_volume_size }  # Use the parameter for size
+      size: { get_param: linux_disk_size }  # Use the parameter for size
       image: { get_param: ubuntu_20_image }  # Optional: Use the same image as the instance
-
-  # Attach the volume to the master instance
-  master_volume_attachment:
-    type: OS::Cinder::VolumeAttachment
-    properties:
-      instance_uuid: { get_resource: master_instance }
-      volume_id: { get_resource: master_volume }
-      mountpoint: /dev/vdb  # Specify the mount point for the volume
 
   master_instance:
     type: OS::Nova::Server
     properties:
       name: master-ubuntu
-      image: { get_param: ubuntu_20_image }
+      block_device_mapping: [{"volume_id": { get_resource: master_volume },
+                              "delete_on_termination": true, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       networks:
@@ -181,7 +187,11 @@ resources:
     properties:
       count: { get_param: environment_count }
       resource_def:
-        type: https://github.com/CyberLions/red-blue-env/raw/refs/heads/main/docs/heat/templates/environment_template.yaml
+        type:
+          yaql:
+            expression: "'https://raw.githubusercontent.com/CyberLions/red-blue-env/refs/heads/' + $.data.github_branch + '/docs/heat/templates/ccdc-qualifier/environment_template.yaml'"
+            data:
+              github_branch: { get_param: github_branch }
         properties:
           environment_index: 
             yaql:
@@ -195,6 +205,8 @@ resources:
           fedora_31_image: { get_param: fedora_31_image }
           public_net: { get_param: public_net }
           central_router_id: { get_resource: central_router }
+          windows_disk_size: { get_param: windows_disk_size }
+          linux_disk_size: { get_param: linux_disk_size }
 
 outputs:
   master_network_id:
