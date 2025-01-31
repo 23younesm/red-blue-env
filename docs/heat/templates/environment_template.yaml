@@ -23,6 +23,13 @@ parameters:
     type: string
   central_router_id:
     type: string
+  disk_size:
+    type: number
+    label: Disk Size (GB)
+    description: Size of the disk to use for Kali
+    constraints:
+      - range: { min: 15 }
+    default: 40
 
 resources:
   env_network:
@@ -118,6 +125,56 @@ resources:
       router_id: { get_param: central_router_id }
       subnet_id: { get_resource: public_subnet }
 
+  # Volumes for each machine
+  windows_2019_internal_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: windows_2019_image }
+
+  debian_10_internal_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: debian_10_image }
+
+  ubuntu_18_user_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: ubuntu_18_image }
+
+  windows_2019_user_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: windows_2019_image }
+
+  ubuntu_20_desktop_user_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: ubuntu_20_image }
+
+  splunk_public_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: debian_10_image }
+
+  centos_7_public_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: centos_7_image }
+
+  fedora_31_public_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: disk_size }
+      image: { get_param: fedora_31_image }
+
+  # Servers with volumes attached
   windows_2019_internal:
     type: OS::Nova::Server
     properties:
@@ -126,7 +183,9 @@ resources:
           template: windows-2019-internal-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: windows_2019_image }
+      block_device_mapping: [{"volume_id": { get_resource: windows_2019_internal_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -149,7 +208,9 @@ resources:
           template: debian-10-internal-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: debian_10_image }
+      block_device_mapping: [{"volume_id": { get_resource: debian_10_internal_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -172,7 +233,9 @@ resources:
           template: ubuntu-18-user-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: ubuntu_18_image }
+      block_device_mapping: [{"volume_id": { get_resource: ubuntu_18_user_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -195,7 +258,9 @@ resources:
           template: windows-2019-user-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: windows_2019_image }
+      block_device_mapping: [{"volume_id": { get_resource: windows_2019_user_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -218,7 +283,9 @@ resources:
           template: ubuntu-20-desktop-user-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: ubuntu_20_image }
+      block_device_mapping: [{"volume_id": { get_resource: ubuntu_20_desktop_user_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -241,7 +308,9 @@ resources:
           template: splunk-public-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: debian_10_image }
+      block_device_mapping: [{"volume_id": { get_resource: splunk_public_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -264,7 +333,9 @@ resources:
           template: centos-7-public-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: centos_7_image }
+      block_device_mapping: [{"volume_id": { get_resource: centos_7_public_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
@@ -287,7 +358,9 @@ resources:
           template: fedora-31-public-$index
           params:
             $index: { get_param: environment_index }
-      image: { get_param: fedora_31_image }
+      block_device_mapping: [{"volume_id": { get_resource: fedora_31_public_volume },
+                              "delete_on_termination": false, 
+                              "device_name": "vda"}]
       flavor: m1.medium
       key_name: { get_param: key_name }
       security_groups:
